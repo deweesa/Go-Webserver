@@ -14,7 +14,7 @@ const (
 	SERVER_TYPE = "tcp"
 	// BASIC_RESPONSE    = "HTTP/1.1 200 Ok\r\n\r\nRequested path: %s \r\n"
 	BASIC_RESPONSE    = "HTTP/1.1 200 Ok\r\n\r\n%s"
-	NOT_FOUND         = "HTTP/1.1 400 Not Found"
+	NOT_FOUND         = "HTTP/1.1 400 Not Found\n"
 	SERVING_DIRECTORY = "./www"
 )
 
@@ -44,7 +44,9 @@ func main() {
 }
 
 // TODO: Refactor this method it's getting sloppy
-// TODO: Get the empty response working again
+//
+//	TODO: A bit better with the reorg, now should extract methods as we can
+//	NOTE: How much can we defer? I don't like having several conn.close but it's not the worse
 func processClient(connection net.Conn) {
 	buffer := make([]byte, 1024)
 
@@ -52,21 +54,21 @@ func processClient(connection net.Conn) {
 	if err != nil {
 		fmt.Println("Error reading:", err.Error())
 	}
-	path := extractPath(string(buffer))
 
-	// TODO: Can bring this into `extractPath` I think
-	filePath := SERVING_DIRECTORY + path
+	filePath := extractPath(string(buffer))
 	fmt.Println("FilePath: ", filePath)
 	stat, err := os.Stat(filePath)
 	if err != nil {
-		fmt.Println("Error finding file:", filePath, err.Error())
+		fmt.Println("Error finding file:", err.Error())
+		connection.Write([]byte(NOT_FOUND))
 		connection.Close()
 		return
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println("Error opening file:", filePath, err.Error())
+		fmt.Println("Error opening file:", err.Error())
+		connection.Write([]byte(NOT_FOUND))
 		connection.Close()
 		return
 	}
@@ -76,6 +78,7 @@ func processClient(connection net.Conn) {
 	_, err = bufio.NewReader(file).Read(fileContents)
 	if err != nil {
 		fmt.Println("Error reading file:", err.Error())
+		connection.Write([]byte(NOT_FOUND))
 		connection.Close()
 		return
 	}
@@ -97,5 +100,5 @@ func extractPath(info string) string {
 		path = "/index.html"
 	}
 
-	return path
+	return SERVING_DIRECTORY + path
 }
