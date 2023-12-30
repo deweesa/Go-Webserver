@@ -56,7 +56,6 @@ func processClient(connection net.Conn) {
 	}
 
 	filePath := extractPath(string(buffer))
-	fmt.Println("FilePath: ", filePath)
 	stat, err := os.Stat(filePath)
 	if err != nil {
 		fmt.Println("Error finding file:", err.Error())
