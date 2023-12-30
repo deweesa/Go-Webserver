@@ -9,20 +9,15 @@ import (
 )
 
 const (
-	SERVER_HOST = "localhost"
-	SERVER_PORT = "80"
-	SERVER_TYPE = "tcp"
-	// BASIC_RESPONSE    = "HTTP/1.1 200 Ok\r\n\r\nRequested path: %s \r\n"
+	SERVER_HOST       = "localhost"
+	SERVER_PORT       = "80"
+	SERVER_TYPE       = "tcp"
 	BASIC_RESPONSE    = "HTTP/1.1 200 Ok\r\n\r\n%s"
 	NOT_FOUND         = "HTTP/1.1 400 Not Found\n"
 	SERVING_DIRECTORY = "./www"
 )
 
 func main() {
-	fmt.Println("Hello world")
-	args := os.Args[1:]
-	fmt.Println(args)
-
 	server, err := net.Listen(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
@@ -43,10 +38,6 @@ func main() {
 	}
 }
 
-// TODO: Refactor this method it's getting sloppy
-//
-//	TODO: A bit better with the reorg, now should extract methods as we can
-//	NOTE: How much can we defer? I don't like having several conn.close but it's not the worse
 func processClient(connection net.Conn) {
 	buffer := make([]byte, 1024)
 
@@ -72,7 +63,6 @@ func processClient(connection net.Conn) {
 		return
 	}
 
-	// NOTE: I wonder if we can chunk this for larger files. Worth a new branch for messing around
 	fileContents := make([]byte, stat.Size())
 	_, err = bufio.NewReader(file).Read(fileContents)
 	if err != nil {
